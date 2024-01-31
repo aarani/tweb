@@ -46,8 +46,7 @@ export function constructTelegramWebSocketUrl(dcId: DcId, connectionType: Connec
   }
 
   const suffix = getTelegramConnectionSuffix(connectionType);
-  const path = connectionType !== 'client' ? 'apiws' + TEST_SUFFIX + (premium ? PREMIUM_SUFFIX : '') : ('apiws' + TEST_SUFFIX);
-  const chosenServer = `wss://${App.suffix.toLowerCase()}ws${dcId}${suffix}.web.telegram.org/${path}`;
+  const chosenServer = `ws://127.0.0.1:5000/apiws`;
 
   return chosenServer;
 }
@@ -57,16 +56,10 @@ export class DcConfigurator {
 
   private dcOptions = Modes.test ?
     [
-      {id: 1, host: '149.154.175.10',  port: 80},
-      {id: 2, host: '149.154.167.40',  port: 80},
-      {id: 3, host: '149.154.175.117', port: 80}
+      {id: 1, host: '127.0.0.1',  port: 5000}
     ] :
     [
-      {id: 1, host: '149.154.175.50',  port: 80},
-      {id: 2, host: '149.154.167.50',  port: 80},
-      {id: 3, host: '149.154.175.100', port: 80},
-      {id: 4, host: '149.154.167.91',  port: 80},
-      {id: 5, host: '149.154.171.5',   port: 80}
+      {id: 1, host: '127.0.0.1',  port: 5000}
     ];
 
   public chosenServers: Servers = {} as any;
@@ -97,19 +90,14 @@ export class DcConfigurator {
     }
 
     let chosenServer: string;
-    if(Modes.ssl || !Modes.http) {
-      const suffix = getTelegramConnectionSuffix(connectionType);
-      const subdomain = this.sslSubdomains[dcId - 1] + suffix;
-      const path = Modes.test ? 'apiw_test1' : 'apiw1';
-      chosenServer = 'https://' + subdomain + '.web.telegram.org/' + path;
-    } else {
-      for(const dcOption of this.dcOptions) {
-        if(dcOption.id === dcId) {
-          chosenServer = 'http://' + dcOption.host + (dcOption.port !== 80 ? ':' + dcOption.port : '') + '/apiw1';
-          break;
-        }
+
+    for(const dcOption of this.dcOptions) {
+      if(dcOption.id === dcId) {
+        chosenServer = 'http://' + dcOption.host + (dcOption.port !== 80 ? ':' + dcOption.port : '') + '/apiw1';
+        break;
       }
     }
+
 
     const logSuffix = connectionType === 'upload' ? '-U' : connectionType === 'download' ? '-D' : '';
     return new HTTP(dcId, chosenServer, logSuffix);
